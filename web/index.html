@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f14">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Telefon Ses</title>
+<style>
+  :root{
+    --bg:#0b0f14; --kart:#141b24; --kart2:#1b242f; --ana:#3ddc97; --ana2:#2bb37a;
+    --kirmizi:#ff5c5c; --yazi:#e7edf3; --soluk:#8b9bad; --cizgi:#243040;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  body{
+    margin:0; background:var(--bg); color:var(--yazi);
+    font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+    padding:16px 14px calc(28px + env(safe-area-inset-bottom));
+    max-width:520px; margin-inline:auto; user-select:none;
+  }
+  h1{font-size:20px; margin:4px 0 2px; letter-spacing:.2px}
+  .alt{color:var(--soluk); font-size:13px; margin:0 0 18px}
+
+  .kart{background:var(--kart); border:1px solid var(--cizgi); border-radius:16px; padding:14px; margin-bottom:12px}
+  .kart h2{font-size:13px; text-transform:uppercase; letter-spacing:.8px; color:var(--soluk); margin:0 0 10px; font-weight:600}
+
+  #baslat{
+    width:100%; padding:20px; font-size:19px; font-weight:700; border:0; border-radius:16px;
+    background:var(--ana); color:#06231a; margin-bottom:14px; transition:.15s;
+  }
+  #baslat:active{transform:scale(.985)}
+  #baslat.calisiyor{background:var(--kirmizi); color:#2a0808}
+
+  .satir{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 0}
+  .satir + .satir{border-top:1px solid var(--cizgi)}
+  .satir label{flex:1; font-size:15px}
+  .satir small{display:block; color:var(--soluk); font-size:12px; font-weight:400}
+
+  .anahtar{position:relative; width:52px; height:31px; flex:none}
+  .anahtar input{opacity:0; width:100%; height:100%; margin:0; position:absolute; z-index:2}
+  .anahtar span{position:absolute; inset:0; background:var(--kart2); border-radius:99px; transition:.18s}
+  .anahtar span:after{content:""; position:absolute; width:25px; height:25px; border-radius:99px;
+    background:#7d8b9c; top:3px; left:3px; transition:.18s}
+  .anahtar input:checked + span{background:rgba(61,220,151,.25)}
+  .anahtar input:checked + span:after{background:var(--ana); transform:translateX(21px)}
+
+  select,input[type=range]{background:var(--kart2); color:var(--yazi); border:1px solid var(--cizgi);
+    border-radius:10px; padding:8px 10px; font-size:14px}
+  input[type=range]{-webkit-appearance:none; appearance:none; padding:0; height:30px; border:0; background:transparent; width:150px}
+  input[type=range]::-webkit-slider-runnable-track{height:5px; background:var(--kart2); border-radius:9px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:22px; height:22px; margin-top:-9px;
+    border-radius:99px; background:var(--ana)}
+
+  .olcer{height:9px; background:var(--kart2); border-radius:9px; overflow:hidden; margin-top:7px}
+  .olcer i{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--ana2),var(--ana)); transition:width .08s linear}
+  .olcer.mik i{background:linear-gradient(90deg,#c58cff,#8f6bff)}
+  .etiket{display:flex; justify-content:space-between; font-size:12px; color:var(--soluk)}
+
+  #durum{display:flex; align-items:center; gap:9px; font-size:14px; margin-bottom:12px;
+    background:var(--kart); border:1px solid var(--cizgi); border-radius:12px; padding:11px 13px}
+  #nokta{width:10px; height:10px; border-radius:99px; background:#5a6675; flex:none}
+  #nokta.ac{background:var(--ana); box-shadow:0 0 10px var(--ana)}
+  #nokta.hata{background:var(--kirmizi)}
+
+  table{width:100%; border-collapse:collapse; font-size:13px}
+  td{padding:4px 0; color:var(--soluk)}
+  td:last-child{text-align:right; color:var(--yazi); font-variant-numeric:tabular-nums;
+    max-width:60%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .ipucu{color:var(--soluk); font-size:12.5px; line-height:1.6; margin:14px 2px 0}
+</style>
+</head>
+<body>
+
+<h1>Telefon Ses</h1>
+<p class="alt">Telefonun = bilgisayarin kablosuz hoparloru ve mikrofonu</p>
+
+<div id="durum"><i id="nokta"></i><span id="durumYazi">Hazir - baslatmak icin dokun</span></div>
+
+<button id="baslat">BASLAT</button>
+
+<div class="kart">
+  <h2>Yonler</h2>
+  <div class="satir">
+    <label>Hoparlor<small>PC sesi telefondan calsin</small></label>
+    <div class="anahtar"><input type="checkbox" id="hoparlorAc" checked><span></span></div>
+  </div>
+  <div class="olcer"><i id="hopBar"></i></div>
+  <div class="satir">
+    <label>Mikrofon<small>Telefon mikrofonu PC'ye gitsin</small></label>
+    <div class="anahtar"><input type="checkbox" id="mikAc"><span></span></div>
+  </div>
+  <div class="olcer mik"><i id="mikBar"></i></div>
+</div>
+
+<div class="kart">
+  <h2>Ayarlar</h2>
+  <div class="satir">
+    <label>Ses kalitesi</label>
+    <select id="kalite">
+      <option value="48-2" selected>Yuksek - 48 kHz stereo</option>
+      <option value="48-1">Orta - 48 kHz mono</option>
+      <option value="24-1">Dusuk - 24 kHz mono</option>
+    </select>
+  </div>
+  <div class="satir">
+    <label>Tampon<small><span id="tamponYazi">120</span> ms - artir: kesilme azalir</small></label>
+    <input type="range" id="tampon" min="20" max="500" step="10" value="120">
+  </div>
+  <div class="satir">
+    <label>Mikrofon seviyesi<small><span id="kazancYazi">1.0</span>x</small></label>
+    <input type="range" id="kazanc" min="0.2" max="4" step="0.1" value="1">
+  </div>
+  <div class="satir">
+    <label>Yanki engelleme<small>Hoparlor + mikrofon ayni anda ise ac</small></label>
+    <div class="anahtar"><input type="checkbox" id="aec" checked><span></span></div>
+  </div>
+  <div class="satir">
+    <label>Otomatik tampon<small>Cizirti/kesilme olursa tamponu kendi buyutur</small></label>
+    <div class="anahtar"><input type="checkbox" id="otoTampon" checked><span></span></div>
+  </div>
+</div>
+
+<div class="kart">
+  <h2>Durum</h2>
+  <table>
+    <tr><td>Ag gecikmesi (gidis-donus)</td><td id="dRtt">-</td></tr>
+    <tr><td>Ses tamponu</td><td id="dTampon">-</td></tr>
+    <tr><td>Telefon cikis gecikmesi</td><td id="dCikis">-</td></tr>
+    <tr><td><b>Toplam gecikme</b></td><td id="dToplam">-</td></tr>
+    <tr><td>Kesilme (toplam / son 3 sn)</td><td id="dKesilme">0</td></tr>
+    <tr><td>Ornekleme hizi</td><td id="dHz">-</td></tr>
+    <tr><td>Sunucuda dusen paket</td><td id="dDusen">0</td></tr>
+    <tr><td>PC ses kaynagi</td><td id="dKaynak">-</td></tr>
+    <tr><td>PC mikrofon cikisi</td><td id="dMik">-</td></tr>
+  </table>
+</div>
+
+<p class="ipucu">
+  Ipucu: Ekran kapaninca tarayici sesi durdurabilir; bu sayfa ekrani acik tutmaya calisir.
+  Mikrofon calismiyorsa tarayici izin penceresine "izin ver" demen gerekir.
+</p>
+
+<script>
+"use strict";
+
+/* ---------- AudioWorklet modulu (iki islemci) ---------- */
+var WORKLET_KOD = [
+"class HoparlorIsleyici extends AudioWorkletProcessor {",
+"  constructor(o){ super();",
+"    var p=(o&&o.processorOptions)||{};",
+"    this.q=[]; this.pos=0; this.cerceve=0; this.hazir=false; this.altakis=0; this.tik=0;",
+"    this.min=p.min||5760; this.max=p.max||48000;",
+"    this.port.onmessage=(e)=>{ var d=e.data;",
+"      if(d && d.cmd==='ayar'){ this.min=d.min; this.max=d.max;",
+"        if(this.cerceve<this.min){ this.hazir=false; }",  // buyuttu -> yeniden doldur
+"        else { while(this.q.length){",                    // kucultttu -> fazlasini at
+"          var b0=this.q[0], kal=b0[0].length-this.pos;",
+"          if(this.cerceve-kal < this.min) break;",
+"          this.q.shift(); this.cerceve-=kal; this.pos=0; } }",
+"        return; }",
+"      if(d && d.cmd==='sifirla'){ this.q=[]; this.pos=0; this.cerceve=0; this.hazir=false; return; }",
+"      this.q.push(d); this.cerceve+=d[0].length;",
+"      while(this.cerceve>this.max && this.q.length>1){",
+"        var h=this.q.shift(); this.cerceve-=(h[0].length-this.pos); this.pos=0; }",
+"      if(!this.hazir && this.cerceve>=this.min) this.hazir=true;",
+"    };",
+"  }",
+"  process(a,outputs){",
+"    var out=outputs[0]; var n=out[0].length; var i=0;",
+"    if(!this.hazir){ for(var c=0;c<out.length;c++) out[c].fill(0);",
+"      if((++this.tik%25)===0) this.port.postMessage({tampon:this.cerceve,altakis:this.altakis});",
+"      return true; }",
+"    while(i<n){",
+"      if(!this.q.length){ this.hazir=false; this.altakis++;",
+"        for(var c2=0;c2<out.length;c2++) out[c2].fill(0,i); break; }",
+"      var blk=this.q[0]; var kalan=blk[0].length-this.pos; var al=Math.min(kalan,n-i);",
+"      for(var ch=0;ch<out.length;ch++){",
+"        var src=blk[ch<blk.length?ch:blk.length-1];",
+"        out[ch].set(src.subarray(this.pos,this.pos+al), i); }",
+"      this.pos+=al; i+=al; this.cerceve-=al;",
+"      if(this.pos>=blk[0].length){ this.q.shift(); this.pos=0; }",
+"    }",
+"    if((++this.tik%25)===0) this.port.postMessage({tampon:this.cerceve,altakis:this.altakis});",
+"    return true;",
+"  }",
+"}",
+"class MikIsleyici extends AudioWorkletProcessor {",
+"  constructor(){ super(); this.buf=new Float32Array(480); this.n=0; }",
+"  process(inputs){",
+"    var inp=inputs[0]; if(!inp||!inp[0]) return true; var ch=inp[0];",
+"    for(var i=0;i<ch.length;i++){ this.buf[this.n++]=ch[i];",
+"      if(this.n===480){ this.port.postMessage(this.buf.slice()); this.n=0; } }",
+"    return true;",
+"  }",
+"}",
+"registerProcessor('hoparlor', HoparlorIsleyici);",
+"registerProcessor('mik', MikIsleyici);"
+].join("\n");
+
+/* ---------- durum ---------- */
+var ctx=null, ws=null, hopDugum=null, mikDugum=null, mikAkis=null, sessiz=null;
+var calisiyor=false, kapaniyor=false, wakeLock=null, yenidenDene=null;
+var pkKanal=2, pkHz=48000, rtt=0, kesilme=0, tamponMs=0;
+var hopRms=0, mikRms=0;
+
+var E=function(id){return document.getElementById(id);};
+var baslatBtn=E("baslat"), nokta=E("nokta"), durumYazi=E("durumYazi");
+
+function durum(metin, sinif){
+  durumYazi.textContent=metin;
+  nokta.className = sinif||"";
+}
+
+/* ---------- ayarlar ---------- */
+function ayarlar(){
+  var k=E("kalite").value.split("-");
+  return {
+    hz: parseInt(k[0],10)*1000,
+    kanal: parseInt(k[1],10),
+    tampon: parseInt(E("tampon").value,10),
+    kazanc: parseFloat(E("kazanc").value),
+    hoparlor: E("hoparlorAc").checked,
+    mik: E("mikAc").checked,
+    aec: E("aec").checked
+  };
+}
+
+function cfgGonder(){
+  if(!ws || ws.readyState!==1) return;
+  var a=ayarlar();
+  ws.send(JSON.stringify({t:"cfg", hz:a.hz, kanal:a.kanal, hoparlor:a.hoparlor,
+    mikHz: ctx?Math.round(ctx.sampleRate):48000, kazanc:a.kazanc, ad:"telefon"}));
+}
+
+function tamponGuncelle(){
+  var ms=ayarlar().tampon;
+  E("tamponYazi").textContent=ms;
+  if(hopDugum){
+    var sr = ctx.sampleRate;
+    hopDugum.port.postMessage({cmd:"ayar",
+      min: Math.round(sr*ms/1000),
+      max: Math.round(sr*Math.max(ms*3, ms+300)/1000)});
+  }
+}
+
+/* ---------- ses yardimcilari ---------- */
+/* Bloklar arasi surekli (durumlu) yeniden ornekleyici.
+   yrFaz: bir sonraki cikti orneginin girdi indeksi (negatifse onceki bloga bakar)
+   yrSon: her kanalin onceki blogundaki son ornek -> sinirda sureksizlik olmaz */
+var yrFaz=0, yrSon=null;
+
+function yrSifirla(){ yrFaz=0; yrSon=null; }
+
+function ayirVeCevir(pcm, kanal, kaynakHz, hedefHz){
+  var n=Math.floor(pcm.length/kanal), kanallar=[], c, i;
+  for(c=0;c<kanal;c++){
+    var a=new Float32Array(n);
+    for(i=0;i<n;i++) a[i]=pcm[i*kanal+c]/32768;
+    kanallar.push(a);
+  }
+  if(kaynakHz===hedefHz || n<2){ yrSifirla(); return kanallar; }
+
+  var adim=kaynakHz/hedefHz;                 // cikti basina girdi ornegi
+  if(!yrSon || yrSon.length!==kanal){ yrSon=new Float32Array(kanal); yrFaz=0; }
+  var t0=yrFaz;
+  var m=Math.max(0, Math.ceil((n-1-t0)/adim));   // t<n-1 olan cikti sayisi
+  var cikti=[];
+  for(c=0;c<kanal;c++){
+    var x=kanallar[c], onceki=yrSon[c], y=new Float32Array(m);
+    for(i=0;i<m;i++){
+      var t=t0+i*adim, i0=Math.floor(t), f=t-i0;
+      y[i]=((i0<0)?onceki:x[i0])*(1-f) + x[i0+1]*f;
+    }
+    cikti.push(y);
+  }
+  for(c=0;c<kanal;c++) yrSon[c]=kanallar[c][n-1];
+  yrFaz=t0+m*adim-n;                         // sonraki blogun koordinatina tasi
+  return cikti;
+}
+
+function rmsHesap(a){
+  var s=0; for(var i=0;i<a.length;i+=4) s+=a[i]*a[i];
+  return Math.sqrt(s/(a.length/4||1));
+}
+
+/* ---------- websocket ---------- */
+function wsBaglan(){
+  var url=(location.protocol==="https:"?"wss://":"ws://")+location.host+"/ws";
+  ws=new WebSocket(url);
+  ws.binaryType="arraybuffer";
+
+  ws.onopen=function(){
+    durum("Bagli - ses akiyor","ac");
+    // kopma sirasinda kuyrukta kalmis eski sesi at, yeniden ornekleyiciyi sifirla
+    yrSifirla();
+    if(hopDugum) hopDugum.port.postMessage({cmd:"sifirla"});
+    cfgGonder();
+  };
+  ws.onmessage=function(ev){
+    if(typeof ev.data==="string"){
+      var m=JSON.parse(ev.data);
+      if(m.t==="hos"){
+        E("dKaynak").textContent=m.kaynak||"-";
+        E("dMik").textContent=m.mikVar?(m.mikCikis||"-"):"yok (VB-CABLE kurulu degil)";
+      } else if(m.t==="pong"){
+        pongGeldi(m.ts);
+        E("dDusen").textContent=m.dusen||0;
+      }
+      return;
+    }
+    var u8=new Uint8Array(ev.data);
+    if(u8[0]!==0x02 || !hopDugum) return;
+    pkKanal=u8[1]||2;
+    pkHz=(u8[2]===1)?24000:48000;
+    var pcm=new Int16Array(ev.data, 4);
+    var kan=ayirVeCevir(pcm, pkKanal, pkHz, ctx.sampleRate);
+    hopRms=rmsHesap(kan[0]);
+    hopDugum.port.postMessage(kan, kan.map(function(x){return x.buffer;}));
+  };
+  ws.onclose=function(){
+    if(kapaniyor) return;
+    durum("Baglanti koptu - tekrar deneniyor...","hata");
+    yenidenDene=setTimeout(wsBaglan, 1500);
+  };
+  ws.onerror=function(){ };
+}
+
+/* ---------- baslat / durdur ---------- */
+async function baslat(){
+  var a=ayarlar();
+  pkHz=a.hz;
+
+  ctx=new (window.AudioContext||window.webkitAudioContext)({sampleRate:48000, latencyHint:"interactive"});
+  await ctx.resume();
+
+  var blob=new Blob([WORKLET_KOD],{type:"text/javascript"});
+  await ctx.audioWorklet.addModule(URL.createObjectURL(blob));
+
+  hopDugum=new AudioWorkletNode(ctx,"hoparlor",{numberOfInputs:0, numberOfOutputs:1, outputChannelCount:[2]});
+  hopDugum.port.onmessage=function(e){
+    tamponMs=Math.round(e.data.tampon/ctx.sampleRate*1000);
+    kesilme=e.data.altakis;
+  };
+  hopDugum.connect(ctx.destination);
+  tamponGuncelle();
+
+  wsBaglan();
+  if(a.mik) await mikBaslat();
+
+  try{ if(navigator.wakeLock) wakeLock=await navigator.wakeLock.request("screen"); }catch(e){}
+
+  calisiyor=true;
+  baslatBtn.textContent="DURDUR";
+  baslatBtn.classList.add("calisiyor");
+  durum("Baglaniliyor...","");
+}
+
+async function mikBaslat(){
+  if(mikDugum) return;
+  var a=ayarlar();
+  mikAkis=await navigator.mediaDevices.getUserMedia({audio:{
+    echoCancellation:a.aec, noiseSuppression:a.aec, autoGainControl:a.aec,
+    channelCount:1, sampleRate:48000
+  }, video:false});
+  var kaynak=ctx.createMediaStreamSource(mikAkis);
+  mikDugum=new AudioWorkletNode(ctx,"mik",{numberOfInputs:1, numberOfOutputs:1, outputChannelCount:[1]});
+  mikDugum.port.onmessage=function(e){
+    var f=e.data;
+    mikRms=rmsHesap(f);
+    if(!ws || ws.readyState!==1) return;
+    var pak=new ArrayBuffer(2+f.length*2);
+    var bas=new Uint8Array(pak); bas[0]=0x01; bas[1]=0;
+    var pcm=new Int16Array(pak,2);
+    for(var i=0;i<f.length;i++){
+      var v=f[i]*32767; pcm[i]= v>32767?32767 : (v<-32768?-32768 : v|0);
+    }
+    ws.send(pak);
+  };
+  sessiz=ctx.createGain(); sessiz.gain.value=0;
+  kaynak.connect(mikDugum); mikDugum.connect(sessiz); sessiz.connect(ctx.destination);
+}
+
+function mikDurdur(){
+  if(mikDugum){ try{mikDugum.disconnect();}catch(e){} mikDugum=null; }
+  if(sessiz){ try{sessiz.disconnect();}catch(e){} sessiz=null; }
+  if(mikAkis){ mikAkis.getTracks().forEach(function(t){t.stop();}); mikAkis=null; }
+  mikRms=0;
+}
+
+function durdur(){
+  kapaniyor=true;
+  clearTimeout(yenidenDene);
+  mikDurdur();
+  if(ws){ try{ws.close();}catch(e){} ws=null; }
+  if(hopDugum){ try{hopDugum.disconnect();}catch(e){} hopDugum=null; }
+  if(ctx){ try{ctx.close();}catch(e){} ctx=null; }
+  if(wakeLock){ try{wakeLock.release();}catch(e){} wakeLock=null; }
+  calisiyor=false; kapaniyor=false; hopRms=0; mikRms=0; tamponMs=0;
+  baslatBtn.textContent="BASLAT";
+  baslatBtn.classList.remove("calisiyor");
+  durum("Durduruldu - baslatmak icin dokun","");
+}
+
+baslatBtn.onclick=function(){
+  if(calisiyor){ durdur(); return; }
+  durum("Baslatiliyor...","");
+  baslat().catch(function(e){
+    durum("Hata: "+e.message,"hata");
+    durdur();
+  });
+};
+
+/* ---------- ayar olaylari ---------- */
+E("kalite").onchange=function(){ pkHz=ayarlar().hz; cfgGonder(); };
+E("hoparlorAc").onchange=cfgGonder;
+E("kazanc").oninput=function(){ E("kazancYazi").textContent=parseFloat(this.value).toFixed(1); cfgGonder(); };
+E("tampon").oninput=tamponGuncelle;
+E("mikAc").onchange=function(){
+  if(!calisiyor) return;
+  if(this.checked){ mikBaslat().catch(function(e){ durum("Mikrofon acilamadi: "+e.message,"hata"); E("mikAc").checked=false; }); }
+  else mikDurdur();
+};
+E("aec").onchange=function(){
+  if(calisiyor && mikDugum){ mikDurdur(); mikBaslat().catch(function(){}); }
+};
+
+/* ekran geri gelince sesi uyandir */
+document.addEventListener("visibilitychange", function(){
+  // arka plandayken biriken olcumler gercek gecikmeyi yansitmaz
+  rttSifirla();
+  if(!document.hidden && ctx && ctx.state==="suspended") ctx.resume();
+  if(!document.hidden && calisiyor && navigator.wakeLock && !wakeLock){
+    navigator.wakeLock.request("screen").then(function(w){wakeLock=w;}).catch(function(){});
+  }
+});
+
+/* ---------- ag gecikmesi olcumu ----------
+   Tarayici sekmeyi arka plana alinca zamanlayicilari ve olay isleyicilerini
+   dondurur. Ping gidip pong donana kadar gecen sure o donma suresini de icerir;
+   ham fark 36 saniye gibi anlamsiz degerler uretir. Bu yuzden:
+     - sayfa gizliyken hic ping atmiyoruz,
+     - gorunur olunca bekleyen olcumleri atiyoruz,
+     - 2 sn'yi asan yanit gecikme degil KAYIP sayilir,
+     - ekranda son olcumlerin ORTANCASI gosterilir (tek sicrama bozmasin). */
+var pingSayac=0, bekleyenPing={}, rttOrnek=[], rttKayip=0;
+var PING_ZAMAN_ASIMI=2000;
+
+function pingGonder(){
+  if(!ws || ws.readyState!==1 || document.hidden) return;
+  var simdi=performance.now();
+  // suresi dolmus bekleyenleri kayip say
+  for(var k in bekleyenPing){
+    if(simdi-bekleyenPing[k] > PING_ZAMAN_ASIMI){ delete bekleyenPing[k]; rttKayip++; }
+  }
+  pingSayac++;
+  bekleyenPing[pingSayac]=simdi;
+  ws.send(JSON.stringify({t:"ping", ts:pingSayac}));
+}
+
+function pongGeldi(kimlik){
+  var t0=bekleyenPing[kimlik];
+  if(t0===undefined) return;               // zaman asimina ugramis ya da atilmis
+  delete bekleyenPing[kimlik];
+  if(document.hidden) return;              // donma sirasindaki olcum gecersiz
+  var o=performance.now()-t0;
+  if(o > PING_ZAMAN_ASIMI){ rttKayip++; return; }
+  rttOrnek.push(o);
+  if(rttOrnek.length>8) rttOrnek.shift();
+}
+
+function rttGecerli(){
+  if(!rttOrnek.length) return null;
+  var s=rttOrnek.slice().sort(function(a,b){return a-b;});
+  return s[s.length>>1];                   // ortanca
+}
+
+function rttSifirla(){ bekleyenPing={}; rttOrnek=[]; rttKayip=0; }
+
+function rttYazi(){
+  var r=rttGecerli();
+  if(r===null) return rttKayip ? "yanit yok" : "olculuyor...";
+  return Math.round(r)+" ms" + (rttKayip ? "  (kayip "+rttKayip+")" : "");
+}
+
+/* ---------- gosterge dongusu ---------- */
+var tikSayac=0, pencere=[], sonKesilme=0, sonOto=0;
+
+function otomatikTampon(sonKesilmeSayisi){
+  // 3 sn'de 3+ kesilme = duyulur cizirti. Tamponu 40 ms buyut, en fazla 500 ms.
+  if(!E("otoTampon").checked || !calisiyor) return;
+  if(sonKesilmeSayisi < 3) return;
+  if(tikSayac - sonOto < 16) return;          // 4 sn'de birden sik ayarlama
+  var s=E("tampon"), yeni=Math.min(500, parseInt(s.value,10)+40);
+  if(yeni === parseInt(s.value,10)) return;
+  s.value=yeni; tamponGuncelle(); sonOto=tikSayac;
+  durum("Cizirti var - tampon "+yeni+" ms'ye cikarildi","ac");
+}
+
+setInterval(function(){
+  E("hopBar").style.width = Math.min(100, hopRms*260) + "%";
+  E("mikBar").style.width = Math.min(100, mikRms*260) + "%";
+
+  // son 3 saniyedeki kesilme sayisi
+  pencere.push(kesilme - sonKesilme); sonKesilme = kesilme;
+  if(pencere.length > 12) pencere.shift();
+  var sonKes = pencere.reduce(function(a,b){return a+b;},0);
+  E("dKesilme").textContent = kesilme + " / " + sonKes;
+  otomatikTampon(sonKes);
+
+  if(!calisiyor){
+    E("dRtt").textContent = E("dTampon").textContent =
+    E("dCikis").textContent = E("dToplam").textContent = E("dHz").textContent = "-";
+  } else {
+    var sr=Math.round(ctx.sampleRate);
+    E("dHz").textContent = (sr===48000) ? "48000 Hz" : sr+" Hz (donusturuluyor)";
+    // telefonun ses cikis yolu: cogu Android'de gecikmenin buyuk kismi burasi
+    var cikis = Math.round(((ctx.outputLatency||0) + (ctx.baseLatency||0))*1000);
+    E("dRtt").textContent = rttYazi();
+    E("dTampon").textContent = tamponMs+" ms";
+    E("dCikis").textContent = cikis ? cikis+" ms" : "bilinmiyor";
+    // 10 ms sunucu blogu + ag tek yon + tampon + telefon cikisi
+    var r = rttGecerli();
+    E("dToplam").textContent = (r===null) ? "olculemedi"
+      : "~" + Math.round(10 + r/2 + tamponMs + cikis) + " ms";
+  }
+
+  if((++tikSayac % 4)===0) pingGonder();
+}, 250);
+</script>
+</body>
+</html>
